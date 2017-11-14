@@ -3,7 +3,10 @@ package com.hilla.daniel.repositories;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,13 +18,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.hilla.daniel.models.User;
 
 @Repository
-public interface UserRepo extends CrudRepository<User, Long>, UserDetailsService {
+public interface UserRepo extends PagingAndSortingRepository<User, Long>, UserDetailsService {
 
 	List<User> findAll();
 
 	User findByUsername(String username);
 
 	List<User> findByPermissionLevel(int permissionLevel);
+	
+	public default Page<User> usersPerPage(int pageNumber) {
+		PageRequest pageRequest = new PageRequest(pageNumber, 5, Sort.Direction.ASC, "username");
+		return findAll(pageRequest);
+	}
 
 	public default void saveUser(User user, BCryptPasswordEncoder bCryptPasswordEncoder, int permissionLevel) {
 		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));

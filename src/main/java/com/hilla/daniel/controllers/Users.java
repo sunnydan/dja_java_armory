@@ -4,11 +4,14 @@ import java.security.Principal;
 import java.util.List;
 
 import javax.validation.Valid;
+
+import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -77,10 +80,19 @@ public class Users {
 	}
 
 	@RequestMapping("/admin")
-	public String adminPage(Principal principal, Model model) {
+	public String admin(Model model, Principal principal) {
+		return "redirect:/admin/users/page/1";
+	}
+
+	@RequestMapping("/admin/users/page/{pageNumber}")
+	public String adminPage(Model model, @PathVariable("pageNumber") int pageNumber, Principal principal) {
 		String username = principal.getName();
 		model.addAttribute("currentUser", userrepo.findByUsername(username));
-		return "adminPage";
+		Page<User> users = userrepo.usersPerPage(pageNumber - 1);
+		int totalPages = users.getTotalPages();
+		model.addAttribute("totalPages", totalPages);
+		model.addAttribute("users", users);
+		return "users";
 	}
 
 }
