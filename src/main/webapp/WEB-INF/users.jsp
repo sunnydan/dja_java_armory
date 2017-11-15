@@ -54,7 +54,12 @@ pageEncoding="UTF-8"%>
                             <td>
                                 <select style="width: 100%;" onchange="location = this.value;">
                                     <option value="">---Actions---</option>
-                                    <option value="/admin/users/promote/${user.id}">Promote to Admin</option>
+                                    <c:if test="${user.permissionLevel < 2 && currentUser.permissionLevel == 3}">
+                                        <option value="/superadmin/users/promote/${user.id}">Promote to Admin</option>
+                                    </c:if>
+                                    <c:if test="${user.permissionLevel == 2 && currentUser.permissionLevel == 3}">
+                                        <option value="/superadmin/users/demote/${user.id}">Demote from Admin</option>
+                                    </c:if>
                                     <option value="/admin/users/delete/${user.id}">Delete</option>
                                 </select>
                             </td>

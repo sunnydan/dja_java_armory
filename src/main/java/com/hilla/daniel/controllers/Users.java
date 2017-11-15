@@ -58,11 +58,14 @@ public class Users {
 		if (result.hasErrors()) {
 			return "registrationPage.jsp";
 		}
+		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 		List<User> superadmins = userrepo.findByPermissionLevel(3);
 		if (superadmins.size() == 0) {
-			userrepo.saveUser(user, bCryptPasswordEncoder, 3);
+			user.setPermissionLevel(3);
+			userrepo.save(user);
 		} else {
-			userrepo.saveUser(user, bCryptPasswordEncoder, 1);
+			user.setPermissionLevel(1);
+			userrepo.save(user);
 		}
 		return "redirect:/login";
 	}
@@ -80,7 +83,7 @@ public class Users {
 	}
 
 	@RequestMapping("/admin")
-	public String admin(Model model, Principal principal) {
+	public String admin() {
 		return "redirect:/admin/users/page/1";
 	}
 
@@ -93,6 +96,24 @@ public class Users {
 		model.addAttribute("totalPages", totalPages);
 		model.addAttribute("users", users);
 		return "users";
+	}
+
+	@RequestMapping("/superadmin/users/promote/{userid}")
+	public String promoteUser(@PathVariable("userid") long userid) {
+		User user = userrepo.findOne(userid);
+		System.out.println("Promoting " + user.getUsername());
+		user.setPermissionLevel(2);
+		userrepo.save(user);
+		return "redirect:/admin/users/page/1";
+	}
+
+	@RequestMapping("/superadmin/users/demote/{userid}")
+	public String demoteUser(@PathVariable("userid") long userid) {
+		User user = userrepo.findOne(userid);
+		System.out.println("Demoting " + user.getUsername());
+		user.setPermissionLevel(1);
+		userrepo.save(user);
+		return "redirect:/admin/users/page/1";
 	}
 
 }

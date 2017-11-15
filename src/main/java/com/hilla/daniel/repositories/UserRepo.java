@@ -13,8 +13,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import com.hilla.daniel.models.User;
 
 @Repository
@@ -24,17 +22,13 @@ public interface UserRepo extends PagingAndSortingRepository<User, Long>, UserDe
 
 	User findByUsername(String username);
 
+	User findOneById(int id);
+
 	List<User> findByPermissionLevel(int permissionLevel);
-	
+
 	public default Page<User> usersPerPage(int pageNumber) {
 		PageRequest pageRequest = new PageRequest(pageNumber, 5, Sort.Direction.ASC, "username");
 		return findAll(pageRequest);
-	}
-
-	public default void saveUser(User user, BCryptPasswordEncoder bCryptPasswordEncoder, int permissionLevel) {
-		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-		user.setPermissionLevel(permissionLevel);
-		save(user);
 	}
 
 	public default UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -56,9 +50,6 @@ public interface UserRepo extends PagingAndSortingRepository<User, Long>, UserDe
 		}
 		if (user.getPermissionLevel() == 3) {
 			authorities.add(new SimpleGrantedAuthority("ROLE_SUPERADMIN"));
-		}
-		for (GrantedAuthority i : authorities) {
-			System.out.println(i);
 		}
 		return authorities;
 	}
