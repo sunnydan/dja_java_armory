@@ -31,6 +31,10 @@ public class Weapon {
 	@Column
 	@DateTimeFormat(pattern = "MM/dd/yyyy HH:mm:ss")
 	private Date updatedAt;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	private User user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "category_id")
@@ -91,4 +95,13 @@ public class Weapon {
 	public Date getUpdatedAt() {
 		return updatedAt;
 	}
+	
+	public User getAuthor() {
+		return user;
+	}
+
+	public void setAuthor(User user) {
+		this.user = user;
+	}
+
 }

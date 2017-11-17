@@ -3,10 +3,17 @@ package com.hilla.daniel.controllers;
 import java.security.Principal;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.data.domain.Page;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -26,11 +33,14 @@ public class Users {
 	private UserRepo userrepo;
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	private UserValidator userValidator;
+	private AuthenticationManager authenticationManager;
 
-	public Users(UserRepo userrepo, BCryptPasswordEncoder bCryptPasswordEncoder, UserValidator userValidator) {
+	public Users(UserRepo userrepo, BCryptPasswordEncoder bCryptPasswordEncoder, UserValidator userValidator,
+			AuthenticationManager authenticationManager) {
 		this.userrepo = userrepo;
 		this.bCryptPasswordEncoder = bCryptPasswordEncoder;
 		this.userValidator = userValidator;
+		this.authenticationManager = authenticationManager;
 	}
 
 	@RequestMapping("/users/dashboard")
@@ -52,12 +62,14 @@ public class Users {
 	}
 
 	@PostMapping("/registration")
-	public String registration(@Valid @ModelAttribute("user") User user, BindingResult result, Model model) {
+	public String registration(@Valid @ModelAttribute("user") User user, BindingResult result,
+			HttpServletRequest request) {
 		// NEW
 		userValidator.validate(user, result);
 		if (result.hasErrors()) {
-			return "registrationPage.jsp";
+			return "registrationPage";
 		}
+		String password = user.getPassword();
 		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 		List<User> superadmins = userrepo.findByPermissionLevel(3);
 		if (superadmins.size() == 0) {
@@ -67,7 +79,17 @@ public class Users {
 			user.setPermissionLevel(1);
 			userrepo.save(user);
 		}
-		return "redirect:/login";
+		UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(user.getUsername(),
+				password);
+		request.getSession();
+		token.setDetails(new WebAuthenticationDetails(request));
+		Authentication authenticatedUser = authenticationManager.authenticate(token);
+		SecurityContextHolder.getContext().setAuthentication(authenticatedUser);
+		request.getSession().setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+				SecurityContextHolder.getContext());
+		request.getSession().setAttribute("username", user.getUsername());
+		request.getSession().setAttribute("authorities", token.getAuthorities());
+		return "redirect:/weapons";
 	}
 
 	@RequestMapping("/login")
@@ -96,6 +118,13 @@ public class Users {
 		model.addAttribute("totalPages", totalPages);
 		model.addAttribute("users", users);
 		return "users";
+	}
+
+	@RequestMapping("/admin/users/delete/{userid}")
+	public String deleteUser(Model model, @PathVariable("userid") long userid, Principal principal) {
+		User user = userrepo.findOne(userid);
+		userrepo.delete(user);
+		return "redirect:/admin/users/page/1";
 	}
 
 	@RequestMapping("/superadmin/users/promote/{userid}")

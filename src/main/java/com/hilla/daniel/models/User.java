@@ -1,9 +1,13 @@
 package com.hilla.daniel.models;
 
 import java.util.Date;
+import java.util.List;
+
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
@@ -29,6 +33,9 @@ public class User {
 	private Date createdAt;
 	private Date updatedAt;
 	private int permissionLevel;
+
+	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+	private List<Weapon> weapons;
 
 	public User() {
 	}
@@ -97,5 +104,17 @@ public class User {
 
 	public void setPermissionLevel(int permissionLevel) {
 		this.permissionLevel = permissionLevel;
+	}
+
+	public List<Weapon> getWeapons() {
+		return weapons;
+	}
+
+	public void setWeapons(List<Weapon> weapons) {
+		this.weapons = weapons;
+	}
+
+	public void addWeapon(Weapon weapon) {
+		this.weapons.add(weapon);
 	}
 }

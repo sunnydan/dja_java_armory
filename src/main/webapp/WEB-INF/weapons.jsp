@@ -47,11 +47,7 @@ pageEncoding="UTF-8"%>
                                 ${weapon.name}
                             </a>
                         </td>
-                        <td>
-                            <a href="/categories/${category.id}">
-                                ${weapon.category.name}
-                            </a>
-                        </td>
+                        <td>${weapon.category.name}</td>
                         <td>
                             <select style="width: 100%;" onchange="location = this.value;">
                                 <option value="">---Attacks---</option>
